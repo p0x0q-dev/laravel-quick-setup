@@ -1,20 +1,27 @@
 name: quality-scan
-on:
+"on":
   pull_request:
   push:
-    branches: ['*']
 
 permissions:
   contents: read
-  security-events: write
 
 jobs:
   hadolint:
     runs-on: ubuntu-latest
-    if: hashFiles('Dockerfile') != ''
     steps:
       - uses: actions/checkout@v4
+      - name: Check Dockerfile present
+        id: dockerfile
+        shell: bash
+        run: |
+          if [ -f Dockerfile ]; then
+            echo "exists=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "exists=false" >> "$GITHUB_OUTPUT"
+          fi
       - uses: hadolint/hadolint-action@v3.1.0
+        if: steps.dockerfile.outputs.exists == 'true'
         with:
           dockerfile: Dockerfile
           failure-threshold: error
@@ -24,7 +31,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-      - uses: aquasecurity/trivy-action@0.20.0
+      - uses: aquasecurity/trivy-action@master
         with:
           scan-type: fs
           scan-ref: .
