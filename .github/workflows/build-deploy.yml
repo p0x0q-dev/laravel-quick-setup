@@ -31,6 +31,8 @@ jobs:
         uses: docker/metadata-action@v3
         with:
           images: p0x0q/laravel-quick-setup
+          tags: |
+            type=raw,value=php8.1-apache
 
       - name: Build and push Docker image
         uses: docker/build-push-action@v2
