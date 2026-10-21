@@ -25,9 +25,27 @@ jobs:
           username: ${{ secrets.DOCKER_USERNAME }}
           password: ${{ secrets.DOCKER_PASSWORD }}
 
-      # ベースは常に最新の php:8.3-apache-bookworm を取りに行く (キャッシュで古い PHP を掴まない)
+      # 公式 php イメージに修正版がまだ無ければ、docker-library/php の同じ Dockerfile からビルドする
+      - name: Resolve PHP image
+        id: php
+        run: |
+          set -euo pipefail
+          . php/upstream.env
+          official="php:${PHP_UPSTREAM_VERSION}-apache-bookworm"
+          if docker manifest inspect "$official" >/dev/null 2>&1; then
+            echo "image=$official" >> "$GITHUB_OUTPUT"; echo "pull=--pull" >> "$GITHUB_OUTPUT"
+          else
+            git clone -q https://github.com/docker-library/php.git "$RUNNER_TEMP/docker-library-php"
+            git -C "$RUNNER_TEMP/docker-library-php" checkout -q "$PHP_UPSTREAM_REF"
+            grep -qx "ENV PHP_VERSION ${PHP_UPSTREAM_VERSION}" "$RUNNER_TEMP/docker-library-php/8.3/bookworm/apache/Dockerfile"
+            docker build --pull -t "local/php:${PHP_UPSTREAM_VERSION}-apache-bookworm" "$RUNNER_TEMP/docker-library-php/8.3/bookworm/apache"
+            echo "image=local/php:${PHP_UPSTREAM_VERSION}-apache-bookworm" >> "$GITHUB_OUTPUT"; echo "pull=" >> "$GITHUB_OUTPUT"
+          fi
+          echo "version=${PHP_UPSTREAM_VERSION}" >> "$GITHUB_OUTPUT"
+
+      # キャッシュで古い PHP を掴まない
       - name: Build base image
-        run: docker build --pull --no-cache -t "$IMAGE:ci" .
+        run: docker build ${{ steps.php.outputs.pull }} --no-cache --build-arg PHP_IMAGE="${{ steps.php.outputs.image }}" -t "$IMAGE:ci" .
 
       - name: Verify base image
         id: base
@@ -35,7 +53,7 @@ jobs:
           set -euo pipefail
           docker run --rm "$IMAGE:ci" php -v
           ver=$(docker run --rm "$IMAGE:ci" php -r 'echo PHP_VERSION;')
-          case "$ver" in 8.3.*) ;; *) echo "unexpected PHP $ver"; exit 1 ;; esac
+          [ "$ver" = "${{ steps.php.outputs.version }}" ] || { echo "unexpected PHP $ver"; exit 1; }
           docker run --rm "$IMAGE:ci" php -r '
             if (ini_get("session.upload_progress.enabled")) { fwrite(STDERR, "upload_progress is on\n"); exit(1); }
             if (!ini_get("session.use_strict_mode")) { fwrite(STDERR, "use_strict_mode is off\n"); exit(1); }'
