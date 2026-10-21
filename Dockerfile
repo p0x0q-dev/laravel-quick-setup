@@ -1,4 +1,6 @@
-FROM php:8.1-apache
+# PHP_VERSION は CI の matrix で 8.1 / 8.3 を切り替える (既定は従来どおり 8.1)
+ARG PHP_VERSION=8.1
+FROM php:${PHP_VERSION}-apache
 
 # timezone environment
 ENV TZ=UTC \
