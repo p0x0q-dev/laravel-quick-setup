@@ -1,0 +1,6 @@
+[
+  {"env": "prd", "source": "docker.io/p0x0q/prd-aipco-next-container@sha256:77dfe300ce54e4670eed99c8c6a67ce3f418e1d92e5fa00dc91e608ee80495a5", "sha": "c48f194452a08439ec3a31858f9a35008bcd2f36"},
+  {"env": "stg", "source": "docker.io/p0x0q/stg-aipco-next-container@sha256:f9d81f30534295cecd2dedf30d31c6380c50417a43f4ec182e3af31126347368", "sha": "99f9076e09ba89d006718e1c24a750f9d6af4bca"},
+  {"env": "dev", "source": "docker.io/p0x0q/dev-aipco-next-container@sha256:7524a0af24e513b0a6ac2ae3af1bdb60438d71186cd1ff5db619f0e24b8a5d11", "sha": "c3284f9f34da70252b7ea75919179e6b7bc8a7e5"},
+  {"env": "demo", "source": "docker.io/p0x0q/demo-aipco-next-container@sha256:0e78199b79a9fcadde2d9c27e4cffbc94a660de3bb402f99a5b4a6aa4c51e3a6", "sha": "2beb8f52f2623bdd5d462aef3aedfda11d8a701e"}
+]
