@@ -1,4 +1,7 @@
-FROM php:8.3-apache
+# Debian を bookworm に固定する (php:8.3-apache の既定は trixie に移行済み)。
+# 派生イメージの apt パッケージ・node のメジャーを変えずに PHP だけ上げるため。
+ARG PHP_IMAGE=php:8.3-apache-bookworm
+FROM ${PHP_IMAGE}
 
 # timezone environment
 ENV TZ=UTC \
@@ -30,3 +33,7 @@ RUN apt-get update && \
     docker-php-ext-install -j$(nproc) gd && \
     composer config -g process-timeout 3600 && \
     composer config -g repos.packagist composer https://packagist.org
+
+# PHP2Shell (CVE-2026-109618/109619) 緩和。conf.d は php.ini より後に読まれるので、
+# 派生イメージが自前の php.ini を /usr/local/etc/php/php.ini に置いても上書きされない。
+COPY php/zz-php2shell-hardening.ini /usr/local/etc/php/conf.d/zz-php2shell-hardening.ini
